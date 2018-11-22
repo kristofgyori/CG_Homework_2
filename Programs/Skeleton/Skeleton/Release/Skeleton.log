@@ -1,17 +1,21 @@
-﻿Build started 2018.09.24. 14:17:56.
-     1>Project "C:\3dprogramok\GrafikaHazi\Programs\Skeleton\Skeleton\Skeleton.vcxproj" on node 2 (Build target(s)).
-     1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\..\..\Libs\glew-1.13.0\include\\" /IC:\3dprogramok\GrafikaHazi\Programs\Skeleton\..\..\Libs\freeglut\include\ /I"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\..\..\Libs\devil-1.7.8\include\\" /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Skeleton.cpp framework.cpp
-         Skeleton.cpp
-         framework.cpp
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\bin\Skeleton.exe" /NOLOGO /LIBPATH:C:\3dprogramok\GrafikaHazi\Programs\Skeleton\..\..\Libs\freeglut\lib /LIBPATH:"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\..\..\Libs\glew-1.13.0\lib\Release\Win32\\" /LIBPATH:"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\..\..\Libs\devil-1.7.8\lib\\" glew32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\bin\Skeleton.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\3dprogramok\GrafikaHazi\Programs\Skeleton\bin\Skeleton.lib" /MACHINE:X86 /SAFESEH Release\framework.obj
-         Release\Skeleton.obj
-         Generating code
-         Finished generating code
-         Skeleton.vcxproj -> C:\3dprogramok\GrafikaHazi\Programs\Skeleton\bin\Skeleton.exe
-     1>Done Building Project "C:\3dprogramok\GrafikaHazi\Programs\Skeleton\Skeleton\Skeleton.vcxproj" (Build target(s)).
-
-Build succeeded.
-
-Time Elapsed 00:00:01.40
+﻿  Skeleton.cpp
+Skeleton.cpp(44): warning C4305: 'argument': truncation from 'double' to 'float'
+Skeleton.cpp(86): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(160): warning C4305: 'initializing': truncation from 'double' to 'const float'
+Skeleton.cpp(161): warning C4305: 'initializing': truncation from 'double' to 'const float'
+Skeleton.cpp(164): warning C4305: 'initializing': truncation from 'double' to 'const float'
+Skeleton.cpp(219): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(226): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(226): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(243): warning C4018: '<': signed/unsigned mismatch
+Skeleton.cpp(268): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(269): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(272): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Skeleton.cpp(295): warning C4305: 'initializing': truncation from 'double' to 'float'
+  Generating code
+  1 of 331 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  Skeleton.vcxproj -> W:\BME\CG\CG_Homework_2\Programs\Skeleton\bin\Skeleton.exe
+  Skeleton.vcxproj -> W:\BME\CG\CG_Homework_2\Programs\Skeleton\bin\Skeleton.pdb (Full PDB)
