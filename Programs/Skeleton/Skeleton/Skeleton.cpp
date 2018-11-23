@@ -91,7 +91,7 @@ struct Plane : public Intersectable {
 		return hit;
 	}
 };
-class Triangle : Intersectable {
+class Triangle : public Intersectable {
 
 	Point3D r1;
 	Point3D r2;
@@ -99,6 +99,18 @@ class Triangle : Intersectable {
 
 	vec3 normal;
 public:
+
+	Triangle(vec3 _r1, vec3 _r2, vec3 _r3, Material* _material) {
+		r1.r = _r1;	
+		r2.r = _r2;	
+		r3.r = _r3;
+		material = _material;
+		normal = cross(r2.r - r1.r, r3.r - r1.r);
+
+		// Linear Interpolation
+
+	}
+
 	Triangle(vec3 _r1, vec3 _r2, vec3 _r3, vec3 _n1, vec3 _n2, vec3 _n3) {
 		r1.r = _r1;	r1.n = _n1;
 		r2.r = _r2;	r2.n = _n2;
@@ -117,13 +129,14 @@ public:
 	Hit intersect(const Ray& ray) {
 		Hit hit;
 		hit.t = dot((r1.r - ray.start), normal) / (dot(ray.dir, normal));
-
+		//printf("%lf \n", hit.t);
 		hit.position = ray.start + ray.dir * hit.t;
 
 		/*	if (dot(ray.dir, normal) > 0)
 		normal = normal * (-1);*/
-
-		hit.normal = normal;
+		hit.material = material;
+		hit.normal = normalize(normal);
+		if (dot(hit.normal, ray.dir) > 0) hit.normal = hit.normal * (-1); // flip the normal, we are inside the sphere
 		if (isItInside(hit.position)) {
 			return hit;
 		}
@@ -296,18 +309,19 @@ public:
 		camera.set(eye, lookat, vup, fov);
 
 		La = vec3(0.4f, 0.4f, 0.4f);
-		vec3 lightDirection(0, 1, 2), Le(50, 50, 50);
+		vec3 lightDirection(0, 1, 2), Le(5, 5, 5);
 		lights.push_back(new Light(lightDirection, Le));
 
-		La = vec3(0.4f, 0.4f, 0.4f);
+	/*	La = vec3(0.4f, 0.4f, 0.4f);
 		vec3 lightDirection2(0, -1, 2), Le2(50, 50, 50);
-		lights.push_back(new Light(lightDirection2, Le2));
+		lights.push_back(new Light(lightDirection2, Le2));*/
 
 		vec3 kd(0.3f, 0.2f, 0.1f), ks(2, 2, 2);
-		Material * material = new Material(kd, ks, 50);
+		Material * material = new Material(kd, ks, 30);
 		objects.push_back(new DiniSurface(material));
-		
-	//	objects.push_back(new Plane(vec3(0, 0, 0), vec3(0, 0, 1), material));
+		Material * material2 = new Material(kd, ks,20);
+		objects.push_back(new Triangle(vec3(5, 5), vec3(5, -5), vec3(-5, -5), material2));
+		//objects.push_back(new Plane(vec3(0, 0, 0), vec3(0, 0, 1), material));
 
 
 	}
@@ -338,9 +352,11 @@ public:
 		return false;
 	}
 
+
 	vec3 trace(Ray ray, int depth = 0) {
 		Hit hit = firstIntersect(ray);
 		if (hit.t < 0) return La;
+		// rough
 		vec3 outRadiance = hit.material->ka * La;
 		for (Light * light : lights) {
 			Ray shadowRay(hit.position + hit.normal * epsilon, light->direction);
