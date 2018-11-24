@@ -106,6 +106,12 @@ public:
 		normal = cross(r2.r - r1.r, r3.r - r1.r);
 
 		// Linear Interpolation
+		vec3 normal1 = normalize(r1.n);
+		vec3 normal2 = normalize(r2.n);
+		vec3 normal3 = normalize(r3.n);
+		/*float X1 = normal1.x; float Y1 = normal1.y; float U1 = normal1.z;
+		float X2 = normal2.x; float Y2 = normal2.y; float U2 = normal2.z;
+		float X3 = normal3.x; float Y3 = normal3.y; float U3 = normal3.z;*/
 
 		float X1 = r1.n.x; float Y1 = r1.n.y; float U1 = r1.n.z;
 		float X2 = r2.n.x; float Y2 = r2.n.y; float U2 = r2.n.z;
@@ -115,11 +121,10 @@ public:
 		b = ((U3 - U1) - a*(X3 - X1)) / (Y3 - Y1);
 		c = U1 - a*X2 - b*Y2;
 
-		//normal = vec3(a, b, c);
 
 	}
-	void setUpTriangle(vec3 point) {
-		normal = vec3(point.x, point.y, a*point.x + b*point.y + c);
+	vec3 setUpTriangle(vec3 point) {
+		return vec3(point.x, point.y, a*point.x + b*point.y + c);
 	}
 	vec3 GetNormal() {
 		return normal;
@@ -130,7 +135,7 @@ public:
 		hit.t = dot((r1.r - ray.start), normal) / (dot(ray.dir, normal));
 		hit.position = ray.start + ray.dir * hit.t;
 		hit.material = material;
-		//setUpTriangle(normal);
+		
 		hit.normal = normalize(normal);
 		if (dot(hit.normal, ray.dir) > 0) hit.normal = hit.normal * (-1); // flip the normal, we are inside the sphere
 		if (isItInside(hit.position)) {
@@ -204,8 +209,8 @@ private:
 	const float a = 1;
 	const float b = 0.2;
 
-	const int N = 20;        // u
-	const int M = 20;        // v
+	const int N = 60;        // u
+	const int M = 60;        // v
 
 	std::vector<Triangle> triangles;
 	AABB bV;
@@ -289,6 +294,8 @@ public:
 			hit = triangles[k].intersect(ray);
 			if (hit.t > 0) {
 				tempt = hit.t;
+				hit.normal  = normalize(triangles[k].setUpTriangle(hit.position));
+				 
 				break;
 			}
 		}
@@ -340,14 +347,14 @@ public:
 		camera.set(eye, lookat, vup, fov);
 
 		La = vec3(0.1f, 0.1f, 0.1f);
-		vec3 lightDirection(6, 5, 7), Le(0.8, 0.8, 0.8);
+		vec3 lightDirection(0,-5,2), Le(0.8, 0.8, 0.8);
 		lights.push_back(new Light(lightDirection, Le));
-
+		//lights.push_back(new Light(vec3(-1, 0, 10), Le));
 		vec3 kd(1.0f, 1.0f, 0.0f), ks(2, 2, 2);
 		Material * material = new Material(kd, ks, 50);
-		material->rough = false;
-		material->reflective = true;
-		material->refractive = true;
+		material->rough = true;
+		//material->reflective = true;
+		//material->refractive = true;
 		objects.push_back(new DiniSurface(material));
 
 

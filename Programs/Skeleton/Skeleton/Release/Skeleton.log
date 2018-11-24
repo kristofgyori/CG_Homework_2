@@ -1,28 +1,24 @@
 ﻿  Garden.cpp
 Garden.cpp(45): warning C4305: 'argument': truncation from 'double' to 'float'
-Garden.cpp(201): warning C4305: 'initializing': truncation from 'double' to 'const float'
-Garden.cpp(202): warning C4305: 'initializing': truncation from 'double' to 'const float'
-Garden.cpp(205): warning C4305: 'initializing': truncation from 'double' to 'const float'
-Garden.cpp(260): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Garden.cpp(267): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Garden.cpp(267): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-Garden.cpp(287): warning C4018: '<': signed/unsigned mismatch
-Garden.cpp(312): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Garden.cpp(313): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Garden.cpp(316): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Garden.cpp(339): warning C4305: 'initializing': truncation from 'double' to 'float'
-Garden.cpp(343): warning C4305: 'argument': truncation from 'double' to 'float'
-Garden.cpp(354): warning C4305: 'argument': truncation from 'double' to 'float'
-Garden.cpp(355): warning C4305: 'argument': truncation from 'double' to 'float'
-Garden.cpp(431): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(206): warning C4305: 'initializing': truncation from 'double' to 'const float'
+Garden.cpp(207): warning C4305: 'initializing': truncation from 'double' to 'const float'
+Garden.cpp(210): warning C4305: 'initializing': truncation from 'double' to 'const float'
+Garden.cpp(265): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(272): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(272): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(292): warning C4018: '<': signed/unsigned mismatch
+Garden.cpp(319): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(320): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(323): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Garden.cpp(346): warning C4305: 'initializing': truncation from 'double' to 'float'
+Garden.cpp(350): warning C4305: 'argument': truncation from 'double' to 'float'
+Garden.cpp(361): warning C4305: 'argument': truncation from 'double' to 'float'
+Garden.cpp(362): warning C4305: 'argument': truncation from 'double' to 'float'
+Garden.cpp(438): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Generating code
-w:\bme\cg\cg_homework_2\programs\skeleton\skeleton\garden.cpp(37): warning C4723: potential divide by 0
-w:\bme\cg\cg_homework_2\programs\skeleton\skeleton\garden.cpp(37): warning C4723: potential divide by 0
-w:\bme\cg\cg_homework_2\programs\skeleton\skeleton\garden.cpp(37): warning C4723: potential divide by 0
-w:\bme\cg\cg_homework_2\programs\skeleton\skeleton\garden.cpp(37): warning C4723: potential divide by 0
-  333 of 340 functions (97.9%) were compiled, the rest were copied from previous compilation.
-    4 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+  3 of 341 functions ( 0.9%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    9 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Skeleton.vcxproj -> W:\BME\CG\CG_Homework_2\Programs\Skeleton\bin\Skeleton.exe
   Skeleton.vcxproj -> W:\BME\CG\CG_Homework_2\Programs\Skeleton\bin\Skeleton.pdb (Full PDB)
