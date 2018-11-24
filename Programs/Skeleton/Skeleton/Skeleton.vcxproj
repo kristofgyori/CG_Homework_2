@@ -74,7 +74,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="framework.cpp" />
-    <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="Garden.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />

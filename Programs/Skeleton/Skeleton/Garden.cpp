@@ -15,7 +15,7 @@
 //
 // NYILATKOZAT
 // ---------------------------------------------------------------------------------------------
-// Nev    : Gyõri Kristóf
+
 // Neptun : HV0R9S
 // ---------------------------------------------------------------------------------------------
 // ezennel kijelentem, hogy a feladatot magam keszitettem, es ha barmilyen segitseget igenybe vettem vagy
@@ -34,17 +34,18 @@
 const float epsilon = 0.0001f;
 
 ////////////////
-
+inline vec3 operator/(const vec3& v, const vec3& u) { return vec3(v.x / u.x, v.y / u.y, v.z / u.z); }
 // Anyag
 struct Material {
 	vec3 ka, kd, ks;
 	float  shininess;
-	bool rough;
-	bool refracitve;
+	bool rough = true;
+	bool reflective = false;
+	bool refractive = false;
 	Material(vec3 _kd, vec3 _ks, float _shininess) : ka(_kd * M_PI), kd(_kd), ks(_ks) { shininess = _shininess; }
 };
 
-// Metszéspont
+
 struct Hit {
 	float t;
 	vec3 position, normal;
@@ -52,15 +53,18 @@ struct Hit {
 	Hit() { t = -1; }
 };
 
-// Sugáregyenes
+
 struct Ray {
-	vec3 start, dir;
+	vec3 start, dir, reflectionDir;
+	bool out = true;
 	Ray(vec3 _start, vec3 _dir) { start = _start; dir = normalize(_dir); }
+	Ray(vec3 _start, vec3 _dir, bool _out) { start = _start; dir = normalize(_dir); out = _out; }
 };
 
 class Intersectable {
 protected:
 	Material * material;
+
 public:
 	virtual Hit intersect(const Ray& ray) = 0;
 };
@@ -69,40 +73,23 @@ struct Point3D {
 	vec3 n;
 };
 
-struct Plane : public Intersectable {
-	vec3 point, normal;
 
-	Plane(const vec3& _point, const vec3& _normal, Material* mat) {
-		point = _point;
-		normal = normalize(_normal);
-		material = mat;
-	}
-	Hit intersect(const Ray& ray) {
-		Hit hit;
-		double NdotV = dot(normal, ray.dir);
-		if (fabs(NdotV) < epsilon) return hit;
-		double t = dot(normal, point - ray.start) / NdotV;
-		if (t < epsilon) return hit;
-		hit.t = t;
-		hit.position = ray.start + ray.dir * hit.t;
-		hit.normal = normal;
-		if (dot(hit.normal, ray.dir) > 0) hit.normal = hit.normal * (-1); // flip the normal
-		hit.material = material;
-		return hit;
-	}
-};
 class Triangle : public Intersectable {
 
 	Point3D r1;
 	Point3D r2;
 	Point3D r3;
 
+	float a;
+	float b;
+	float c;
+
 	vec3 normal;
 public:
 
 	Triangle(vec3 _r1, vec3 _r2, vec3 _r3, Material* _material) {
-		r1.r = _r1;	
-		r2.r = _r2;	
+		r1.r = _r1;
+		r2.r = _r2;
 		r3.r = _r3;
 		material = _material;
 		normal = cross(r2.r - r1.r, r3.r - r1.r);
@@ -112,16 +99,28 @@ public:
 	}
 
 	Triangle(vec3 _r1, vec3 _r2, vec3 _r3, vec3 _n1, vec3 _n2, vec3 _n3) {
-		r1.r = _r1;	r1.n = _n1;
-		r2.r = _r2;	r2.n = _n2;
-		r3.r = _r3;	r3.n = _n3;
+		r1.r = _r1;    r1.n = _n1;
+		r2.r = _r2;    r2.n = _n2;
+		r3.r = _r3;    r3.n = _n3;
 
 		normal = cross(r2.r - r1.r, r3.r - r1.r);
 
 		// Linear Interpolation
 
-	}
+		float X1 = r1.n.x; float Y1 = r1.n.y; float U1 = r1.n.z;
+		float X2 = r2.n.x; float Y2 = r2.n.y; float U2 = r2.n.z;
+		float X3 = r3.n.x; float Y3 = r3.n.y; float U3 = r3.n.z;
 
+		a = ((U3 - U1)*(Y2 - Y1) - (Y3 - Y1)*(U2 - U1)) / ((X3 - X1)*(Y2 - Y1) - (Y3 - Y1)*(X2 - X1));
+		b = ((U3 - U1) - a*(X3 - X1)) / (Y3 - Y1);
+		c = U1 - a*X2 - b*Y2;
+
+		//normal = vec3(a, b, c);
+
+	}
+	void setUpTriangle(vec3 point) {
+		normal = vec3(point.x, point.y, a*point.x + b*point.y + c);
+	}
 	vec3 GetNormal() {
 		return normal;
 	}
@@ -129,19 +128,16 @@ public:
 	Hit intersect(const Ray& ray) {
 		Hit hit;
 		hit.t = dot((r1.r - ray.start), normal) / (dot(ray.dir, normal));
-		//printf("%lf \n", hit.t);
 		hit.position = ray.start + ray.dir * hit.t;
-
-		/*	if (dot(ray.dir, normal) > 0)
-		normal = normal * (-1);*/
 		hit.material = material;
+		//setUpTriangle(normal);
 		hit.normal = normalize(normal);
 		if (dot(hit.normal, ray.dir) > 0) hit.normal = hit.normal * (-1); // flip the normal, we are inside the sphere
 		if (isItInside(hit.position)) {
 			return hit;
 		}
 		else
-			return Hit();		// default t = -1
+			return Hit();        // default t = -1
 	}
 
 	bool isItInside(const vec3& p) {
@@ -165,6 +161,38 @@ public:
 
 };
 
+class AABB {
+	float x_min;
+	float x_max;
+	float z_min;
+	float z_max;
+	float y;
+	vec3 normal;
+	vec3 point;
+
+public:
+	AABB() {};
+	AABB(float xmin, float xmax, float zmin, float zmax, float _y) {
+		x_min = xmin;x_max = xmax;
+		z_min = zmin; z_max = zmax;
+		y = _y;
+		point = vec3(x_min, y, z_min);
+		normal = cross(vec3(x_max, y, z_min) - vec3(x_max, y, z_max), vec3(x_max, y, z_min) - vec3(x_min, y, z_max));
+	}
+	Hit intersect(const Ray& ray) {
+		Hit hit;
+		hit.t = dot((point - ray.start), normal) / (dot(ray.dir, normal));
+		hit.position = ray.start + ray.dir * hit.t;
+
+		vec3 hp = hit.position;
+
+		if (hp.x > x_min && hp.x < x_max &&  hp.z > z_min && hp.z < z_max)
+			return hit;
+		hit.normal = normalize(normal);
+		hit.t = -1;
+		return hit;
+	}
+};
 
 class DiniSurface : public Intersectable
 {
@@ -174,14 +202,13 @@ private:
 	const float v_min = 0.01;
 	const float v_max = 1;
 	const float a = 1;
-	const float b = 0.15;
-	//const float epsilon = 0.0001;
+	const float b = 0.2;
 
-	const int N = 20;		// u
-	const int M = 20;		// v
+	const int N = 20;        // u
+	const int M = 20;        // v
 
 	std::vector<Triangle> triangles;
-
+	AABB bV;
 	void fillTriangles() {
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
@@ -224,6 +251,7 @@ public:
 	DiniSurface(Material* _material) {
 		material = _material;
 		fillTriangles();
+		bV = AABB(-5.0f, 1.0f, -3.0f, 5.0f, 0);
 	}
 
 	vec3 r(float u, float v) {
@@ -248,11 +276,14 @@ public:
 		return cross(ru, rv);
 	}
 
-	// Hol metszi az adott sugár a felületet?
+
 	Hit intersect(const Ray& ray) {
-		Hit hit;
+		//Hit hit;
+		Hit hit = bV.intersect(ray);
+		if (hit.t < 0)
+			return hit;
+
 		float tempt = -1;
-		//int i = 0;
 		for (int k = 0; k < triangles.size(); k++)
 		{
 			hit = triangles[k].intersect(ray);
@@ -304,25 +335,42 @@ class Scene {
 	vec3 La;
 public:
 	void build() {
-		vec3 eye = vec3(0, -7.5, 5), vup = vec3(0, 1, 0), lookat = vec3(0, 0, 0);
+		vec3 eye = vec3(0, -15, 3), vup = vec3(0, 1, 0), lookat = vec3(0, 0, -2);
 		float fov = 45 * M_PI / 180;
 		camera.set(eye, lookat, vup, fov);
 
-		La = vec3(0.4f, 0.4f, 0.4f);
-		vec3 lightDirection(0, 1, 2), Le(5, 5, 5);
+		La = vec3(0.1f, 0.1f, 0.1f);
+		vec3 lightDirection(6, 5, 7), Le(0.8, 0.8, 0.8);
 		lights.push_back(new Light(lightDirection, Le));
 
-	/*	La = vec3(0.4f, 0.4f, 0.4f);
-		vec3 lightDirection2(0, -1, 2), Le2(50, 50, 50);
-		lights.push_back(new Light(lightDirection2, Le2));*/
-
-		vec3 kd(0.3f, 0.2f, 0.1f), ks(2, 2, 2);
-		Material * material = new Material(kd, ks, 30);
+		vec3 kd(1.0f, 1.0f, 0.0f), ks(2, 2, 2);
+		Material * material = new Material(kd, ks, 50);
+		material->rough = false;
+		material->reflective = true;
+		material->refractive = true;
 		objects.push_back(new DiniSurface(material));
-		Material * material2 = new Material(kd, ks,20);
-		objects.push_back(new Triangle(vec3(5, 5), vec3(5, -5), vec3(-5, -5), material2));
-		//objects.push_back(new Plane(vec3(0, 0, 0), vec3(0, 0, 1), material));
 
+
+		Material * material2 = new Material(vec3(0.682, 0.714, 0.749), ks, 0);
+		Material * material3 = new Material(vec3(0.157, 0.706, 0.388), ks, 100);
+
+		float e = 6.0f;
+		float z = -3.0f;
+		// Floor
+		objects.push_back(new Triangle(vec3(e, e, z), vec3(e, -e, z), vec3(-e, -e, z), material3));
+		objects.push_back(new Triangle(vec3(e, e, z), vec3(-e, e, z), vec3(-e, -e, z), material3));
+
+		// Right
+		objects.push_back(new Triangle(vec3(e, e, z), vec3(e, -e, z), vec3(e, e, e + z), material2));
+		objects.push_back(new Triangle(vec3(e, -e, e + z), vec3(e, -e, z), vec3(e, e, e + z), material2));
+
+		// Front
+		objects.push_back(new Triangle(vec3(e, e, z), vec3(e, e, z + e), vec3(-e, e, z), material2));
+		objects.push_back(new Triangle(vec3(e, e, z + e), vec3(-e, e, z), vec3(-e, e, z + e), material2));
+
+		// Left
+		objects.push_back(new Triangle(vec3(-e, -e, z), vec3(-e, e, z), vec3(-e, e, e + z), material2));
+		objects.push_back(new Triangle(vec3(-e, -e, z), vec3(-e, e, z + e), vec3(-e, -e, e + z), material2));
 
 	}
 
@@ -330,7 +378,7 @@ public:
 		for (int Y = 0; Y < windowHeight; Y++) {
 #pragma omp parallel for
 			for (int X = 0; X < windowWidth; X++) {
-				vec3 color = trace(camera.getRay(X, Y));
+				vec3 color = trace(camera.getRay(X, Y), 3);
 				image[Y * windowWidth + X] = vec4(color.x, color.y, color.z, 1);
 			}
 		}
@@ -346,7 +394,7 @@ public:
 		return bestHit;
 	}
 
-	bool shadowIntersect(Ray ray) {	// for directional lights
+	bool shadowIntersect(Ray ray) {    // for directional lights
 		for (Intersectable * object : objects)
 			if (object->intersect(ray).t > 0) return true;
 		return false;
@@ -356,69 +404,115 @@ public:
 	vec3 trace(Ray ray, int depth = 0) {
 		Hit hit = firstIntersect(ray);
 		if (hit.t < 0) return La;
-		// rough
-		vec3 outRadiance = hit.material->ka * La;
-		for (Light * light : lights) {
-			Ray shadowRay(hit.position + hit.normal * epsilon, light->direction);
-			float cosTheta = dot(hit.normal, light->direction);
-			if (cosTheta > 0 && !shadowIntersect(shadowRay)) {	// shadow computation
-				outRadiance = outRadiance + light->Le * hit.material->kd * cosTheta;
-				vec3 halfway = normalize(-ray.dir + light->direction);
-				float cosDelta = dot(hit.normal, halfway);
-				if (cosDelta > 0)
-					outRadiance = outRadiance + light->Le * hit.material->ks * powf(cosDelta, hit.material->shininess);
+
+		vec3 outRadiance(0, 0, 0);
+		outRadiance = hit.material->ka * La;
+		if (hit.material->rough) {
+			for (Light * light : lights) {
+				Ray shadowRay(hit.position + hit.normal * epsilon, light->direction);
+				float cosTheta = dot(hit.normal, light->direction);
+				if (cosTheta > 0 && !shadowIntersect(shadowRay)) {    // shadow computation
+					outRadiance = outRadiance + light->Le * hit.material->kd * cosTheta;
+					vec3 halfway = normalize(-ray.dir + light->direction);
+					float cosDelta = dot(hit.normal, halfway);
+					if (cosDelta > 0)
+						outRadiance = outRadiance + light->Le * hit.material->ks * powf(cosDelta, hit.material->shininess);
+				}
 			}
 		}
+
+		if (hit.material->reflective) {
+			vec3 reflectionDir = reflect(ray.dir, hit.normal);
+			Ray reflectRay(hit.position + hit.normal * epsilon, reflectionDir, ray.out);
+			outRadiance = outRadiance + trace(reflectRay, depth + 1)*Fresnel(ray.dir, hit.normal);
+		}
+
+		if (hit.material->refractive) {
+			float ior = (ray.out) ? 0.17 : 1 / 0.17;
+			vec3 refractionDir = refract(ray.dir, hit.normal, ior);
+			if (length(refractionDir) > 0) {
+				Ray refractRay(hit.position + hit.normal * epsilon, refractionDir, !ray.out);
+				outRadiance = outRadiance + trace(refractRay, depth + 1)*(vec3(1, 1, 1) - Fresnel(ray.dir, hit.normal));
+			}
+		}
+
 		return outRadiance;
 	}
+
+	vec3 reflect(vec3 inDir, vec3 normal) {
+		return inDir - normal * dot(normal, inDir) * 2.0f;
+	}
+
+	vec3 refract(vec3 inDir, vec3 normal, float ns) {
+		float cosa = -dot(inDir, normal);
+		float disc = 1 - (1 - cosa*cosa) / ns / ns; // scalar n
+		if (disc < 0) return vec3(0, 0, 0);
+		return inDir / ns + normal * (cosa / ns - sqrt(disc));
+	}
+
+
+
+	//float one = 1;
+	vec3 Fresnel(vec3 inDir, vec3 normal) {
+		vec3 n(0.17f, 0.35f, 1.5f);
+		vec3 kappa(3.1f, 2.7f, 1.9f);
+		float cosa = -dot(inDir, normal);
+		vec3 one(1, 1, 1);
+		vec3 F0 = ((n - one)*(n - one) + kappa*kappa) / ((n + one)*(n + one) + kappa*kappa);
+
+		return F0 + (one - F0) * pow(1 - cosa, 5);
+	}
+
+
 };
 
+//vec3::operator/ 
 GPUProgram gpuProgram; // vertex and fragment shaders
 Scene scene;
 
 // vertex shader in GLSL
 const char *vertexSource = R"(
-	#version 330
+    #version 330
     precision highp float;
-
-	layout(location = 0) in vec2 cVertexPosition;	// Attrib Array 0
-	out vec2 texcoord;
-
-	void main() {
-		texcoord = (cVertexPosition + vec2(1, 1))/2;							// -1,1 to 0,1
-		gl_Position = vec4(cVertexPosition.x, cVertexPosition.y, 0, 1); 		// transform to clipping space
-	}
+ 
+    layout(location = 0) in vec2 cVertexPosition;    // Attrib Array 0
+    out vec2 texcoord;
+ 
+    void main() {
+        texcoord = (cVertexPosition + vec2(1, 1))/2;                            // -1,1 to 0,1
+        gl_Position = vec4(cVertexPosition.x, cVertexPosition.y, 0, 1);         // transform to clipping space
+    }
 )";
 
 // fragment shader in GLSL
 const char *fragmentSource = R"(
-	#version 330
+    #version 330
     precision highp float;
-
-	uniform sampler2D textureUnit;
-	in  vec2 texcoord;			// interpolated texture coordinates
-	out vec4 fragmentColor;		// output that goes to the raster memory as told by glBindFragDataLocation
-
-	void main() {
-		fragmentColor = texture(textureUnit, texcoord); 
-	}
+ 
+    uniform sampler2D textureUnit;
+    in  vec2 texcoord;            // interpolated texture coordinates
+    out vec4 fragmentColor;        // output that goes to the raster memory as told by glBindFragDataLocation
+ 
+    void main() {
+        fragmentColor = texture(textureUnit, texcoord); 
+    }
 )";
 
 class FullScreenTexturedQuad {
-	unsigned int vao;	// vertex array object id and texture id
+	unsigned int vao;    // vertex array object id and texture id
 	Texture * pTexture;
 public:
 	void Create(std::vector<vec4>& image) {
-		glGenVertexArrays(1, &vao);	// create 1 vertex array object
-		glBindVertexArray(vao);		// make it active
+		glGenVertexArrays(1, &vao);    // create 1 vertex array object
+		glBindVertexArray(vao);        // make it active
 
-		unsigned int vbo;		// vertex buffer objects
-		glGenBuffers(1, &vbo);	// Generate 1 vertex buffer objects
+		unsigned int vbo;        // vertex buffer objects
+		glGenBuffers(1, &vbo);    // Generate 1 vertex buffer objects
 
-								// vertex coordinates: vbo0 -> Attrib Array 0 -> vertexPosition of the vertex shader
+								  // vertex coordinates: vbo0 -> Attrib Array 0 -> vertexPosition of the vertex shader
 		glBindBuffer(GL_ARRAY_BUFFER, vbo); // make it active, it is an array
-		float vertexCoords[] = { -1, -1,  1, -1,  1, 1,  -1, 1 };	// two triangles forming a quad
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexCoords), vertexCoords, GL_STATIC_DRAW);	   // copy to that part of the memory which is not modified 
+		float vertexCoords[] = { -1, -1,  1, -1,  1, 1,  -1, 1 };    // two triangles forming a quad
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexCoords), vertexCoords, GL_STATIC_DRAW);       // copy to that part of the memory which is not modified 
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);     // stride and offset: it is tightly packed
 
@@ -426,9 +520,9 @@ public:
 	}
 
 	void Draw() {
-		glBindVertexArray(vao);	// make the vao and its vbos active playing the role of the data source
+		glBindVertexArray(vao);    // make the vao and its vbos active playing the role of the data source
 		pTexture->SetUniform(gpuProgram.getId(), "textureUnit");
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);	// draw two triangles forming a quad
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);    // draw two triangles forming a quad
 	}
 };
 
@@ -453,7 +547,7 @@ void onInitialization() {
 // Window has become invalid: Redraw
 void onDisplay() {
 	fullScreenTexturedQuad.Draw();
-	glutSwapBuffers();									// exchange the two buffers
+	glutSwapBuffers();                                    // exchange the two buffers
 }
 
 // Key of ASCII code pressed
@@ -476,4 +570,3 @@ void onMouseMotion(int pX, int pY) {
 // Idle event indicating that some time elapsed: do animation here
 void onIdle() {
 }
-
